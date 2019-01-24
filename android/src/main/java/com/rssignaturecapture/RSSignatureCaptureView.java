@@ -1,3 +1,33 @@
+
+Skip to content
+
+    Pull requests
+    Issues
+    Marketplace
+    Explore
+
+    @jughoor
+
+19
+534
+
+    257
+
+RepairShopr/react-native-signature-capture
+Code
+Issues 69
+Pull requests 18
+Projects 0
+Wiki
+Insights
+react-native-signature-capture/android/src/main/java/com/rssignaturecapture/RSSignatureCaptureView.java
+e2be58a on Jun 17, 2017
+Thomas Lecoeur Fix multiple finger
+@rmevans9
+@nitkuk
+@john1jan
+@jedt
+383 lines (305 sloc) 10.4 KB
 package com.rssignaturecapture;
 
 import android.content.Context;
@@ -29,7 +59,7 @@ import com.rssignaturecapture.utils.ControlTimedPoints;
 import com.rssignaturecapture.utils.Bezier;
 
 public class RSSignatureCaptureView extends View {
-	private static final float STROKE_WIDTH = 2f;
+	private static final float STROKE_WIDTH = 5f;
 	private static final float HALF_STROKE_WIDTH = STROKE_WIDTH / 2;
 
 	private boolean mIsEmpty;
@@ -51,7 +81,8 @@ public class RSSignatureCaptureView extends View {
 	private Canvas mSignatureBitmapCanvas = null;
 	private SignatureCallback callback;
 	private boolean dragged = false;
-	private int SCROLL_THRESHOLD = 50;
+	private boolean multipleTouchDragged = false;
+	private int SCROLL_THRESHOLD = 5;
 
 	public interface SignatureCallback {
 		void onDragged();
@@ -68,9 +99,9 @@ public class RSSignatureCaptureView extends View {
 		mPaint.setStrokeCap(Paint.Cap.ROUND);
 		mPaint.setStrokeJoin(Paint.Join.ROUND);
 
-		mMinWidth = convertDpToPx(4);
-		mMaxWidth = convertDpToPx(8);
-		mVelocityFilterWeight = 0.2f;
+		mMinWidth = convertDpToPx(8);
+		mMaxWidth = convertDpToPx(16);
+		mVelocityFilterWeight = 0.4f;
 		mPaint.setColor(Color.BLACK);
 
 		//Dirty rectangle to update only the changed portion of the view
@@ -197,6 +228,18 @@ public class RSSignatureCaptureView extends View {
 		}
 	}
 
+	public void setMinStrokeWidth(int minStrokeWidth) {
+		mMinWidth = minStrokeWidth;
+	}
+
+	public void setMaxStrokeWidth(int maxStrokeWidth) {
+		mMaxWidth = maxStrokeWidth;
+	}
+
+	public void setStrokeColor(int color) {
+		mPaint.setColor(color);
+	}
+
 	private float strokeWidth(float velocity) {
 		return Math.max(mMaxWidth / (velocity + 1), mMinWidth);
 	}
@@ -226,35 +269,42 @@ public class RSSignatureCaptureView extends View {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		if (!isEnabled())
+		if (!isEnabled() || event.getPointerCount() > 1 || (multipleTouchDragged && event.getAction() != MotionEvent.ACTION_UP)) {
+		    multipleTouchDragged = true;
 			return false;
+		}
 
 		float eventX = event.getX();
 		float eventY = event.getY();
 
 		switch (event.getAction()) {
 			case MotionEvent.ACTION_DOWN:
+                mLastTouchX = eventX;
+                mLastTouchY = eventY;
 				getParent().requestDisallowInterceptTouchEvent(true);
 				mPoints.clear();
 				mPath.moveTo(eventX, eventY);
-				mLastTouchX = eventX;
-				mLastTouchY = eventY;
 				addPoint(new TimedPoint(eventX, eventY));
 
 			case MotionEvent.ACTION_MOVE:
+                if((Math.abs(mLastTouchX - eventX) < SCROLL_THRESHOLD || Math.abs(mLastTouchY - eventY) < SCROLL_THRESHOLD) && dragged) {
+                    return false;
+                }
 				resetDirtyRect(eventX, eventY);
 				addPoint(new TimedPoint(eventX, eventY));
-				if((Math.abs(mLastTouchX - eventX) > SCROLL_THRESHOLD || Math.abs(mLastTouchY - eventY) > SCROLL_THRESHOLD)){
-					dragged = true;
-				}
+                dragged = true;
 				break;
 
 			case MotionEvent.ACTION_UP:
-				resetDirtyRect(eventX, eventY);
-				addPoint(new TimedPoint(eventX, eventY));
-				getParent().requestDisallowInterceptTouchEvent(true);
-				setIsEmpty(false);
-				sendDragEventToReact();
+			    if(mPoints.size() >= 3) {
+                    resetDirtyRect(eventX, eventY);
+                    addPoint(new TimedPoint(eventX, eventY));
+                    getParent().requestDisallowInterceptTouchEvent(true);
+                    setIsEmpty(false);
+                    sendDragEventToReact();
+			    }
+                dragged = false;
+                multipleTouchDragged = false;
 				break;
 
 			default:
@@ -360,3 +410,19 @@ public class RSSignatureCaptureView extends View {
 		public void onClear();
 	}
 }
+
+    © 2019 GitHub, Inc.
+    Terms
+    Privacy
+    Security
+    Status
+    Help
+
+    Contact GitHub
+    Pricing
+    API
+    Training
+    Blog
+    About
+
+Press h to open a hovercard with more details.
