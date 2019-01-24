@@ -1,33 +1,3 @@
-
-Skip to content
-
-    Pull requests
-    Issues
-    Marketplace
-    Explore
-
-    @jughoor
-
-19
-534
-
-    257
-
-RepairShopr/react-native-signature-capture
-Code
-Issues 69
-Pull requests 18
-Projects 0
-Wiki
-Insights
-react-native-signature-capture/android/src/main/java/com/rssignaturecapture/RSSignatureCaptureView.java
-e2be58a on Jun 17, 2017
-Thomas Lecoeur Fix multiple finger
-@rmevans9
-@nitkuk
-@john1jan
-@jedt
-383 lines (305 sloc) 10.4 KB
 package com.rssignaturecapture;
 
 import android.content.Context;
@@ -410,19 +380,3 @@ public class RSSignatureCaptureView extends View {
 		public void onClear();
 	}
 }
-
-    © 2019 GitHub, Inc.
-    Terms
-    Privacy
-    Security
-    Status
-    Help
-
-    Contact GitHub
-    Pricing
-    API
-    Training
-    Blog
-    About
-
-Press h to open a hovercard with more details.
