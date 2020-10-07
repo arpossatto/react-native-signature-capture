@@ -178,9 +178,20 @@ public class RSSignatureCaptureMainView extends LinearLayout implements OnClickL
       byte[] byteArray = byteArrayOutputStream.toByteArray();
       String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
 
+      Boolean imgOk;
+
+      try {
+        Base64.decode(encoded,Base64.DEFAULT);
+        imgOk = true;
+      } catch (Exception e) {
+        imgOk = false;
+      }
+
       WritableMap event = Arguments.createMap();
       event.putString("pathName", file.getAbsolutePath());
       event.putString("encoded", encoded);
+      event.putBoolean("imgOk", imgOk);
+      event.putDouble("dataSize", encoded.length());
       ReactContext reactContext = (ReactContext) getContext();
       reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(getId(), "topChange", event);
     } catch (Exception e) {
